@@ -1,37 +1,42 @@
-from rest_framework.views import APIView
+from django.contrib.auth import authenticate, login, logout
+from rest_framework.generics import CreateAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth import authenticate, login
-from .serializers import RegisterSerializer, LoginSerializer
 
-class RegisterAPIView(APIView):
-    def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({
-                'id': user.id,
-                'username': user.username,
-                'role': user.role
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+from .serializers import RegisterSerializer
+from .models import *
 
 
-class LoginAPIView(APIView):
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = authenticate(
-                username=serializer.validated_data['username'],
-                password=serializer.validated_data['password']
-            )
-            if user:
-                login(request, user)  
-                return Response({
-                    'id': user.id,
-                    'username': user.username,
-                    'role': user.role
-                })
-            return Response({'detail': 'Неверный логин или пароль'}, status=status.HTTP_401_UNAUTHORIZED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class RegisterAPIView(CreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [AllowAny]
 
+
+@api_view(['POST', 'GET'])
+@permission_classes([AllowAny])
+def login_api_view(request):
+    username = request.data.get('username')
+    password = request.data.get('password') 
+    if not username or not password:
+        return Response(
+            {'error':"please full all fields"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    user = authenticate(request, username=username, password=password)
+    if user:
+        login(request, user)
+        return Response({'success':'user logged in'}, status=status.HTTP_200_OK)
+    return Response(
+        {'error':"error with login"},
+        status=status.HTTP_400_BAD_REQUEST
+    )
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def logout_api_view(request):
+    logout(request)
+    return Response({'success':'user logged out'}, status=status.HTTP_200_OK)
