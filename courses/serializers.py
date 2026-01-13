@@ -3,32 +3,26 @@ from .models import Category, Course, Lesson
 from accounts.models import CustomUser
 
 
-# -------------------------
-# Category Serializer
-# -------------------------
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name']
 
 
-# -------------------------
-# Lesson Serializer
-# -------------------------
+
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
         fields = ['id', 'title', 'content', 'image', 'order']
 
 
-# -------------------------
-# Course Serializer (для вывода)
-# -------------------------
+
 class CourseSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)  # вложенный вывод категории
-    lessons = LessonSerializer(many=True, read_only=True)  # вложенные уроки
-    instructor = serializers.StringRelatedField()  # username наставника
-    students = serializers.StringRelatedField(many=True)  # username студентов
+    category = CategorySerializer(read_only=True)  
+    lessons = LessonSerializer(many=True, read_only=True) 
+    instructor = serializers.StringRelatedField()  
+    students = serializers.StringRelatedField(many=True) 
 
     class Meta:
         model = Course
@@ -38,9 +32,7 @@ class CourseSerializer(serializers.ModelSerializer):
         ]
 
 
-# -------------------------
-# Course Serializer (для создания/редактирования)
-# -------------------------
+
 class CourseCreateUpdateSerializer(serializers.ModelSerializer):
     instructor = serializers.StringRelatedField(read_only=True)  # не нужно передавать в POST
 
@@ -48,9 +40,7 @@ class CourseCreateUpdateSerializer(serializers.ModelSerializer):
         model = Course
         fields = ['title', 'description', 'category', 'level', 'instructor']
 
-# -------------------------
-# Enroll Student Serializer
-# -------------------------
+
 class EnrollStudentSerializer(serializers.ModelSerializer):
     student_id = serializers.IntegerField(write_only=True)
 
