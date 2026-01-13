@@ -12,7 +12,7 @@ urlpatterns = [
     path('courses/<int:pk>/', CourseRetrieveUpdateDestroyAPIView.as_view()),
 
     # Enroll student
-    path('courses/<int:pk>/enroll/', enroll_student),
+    path('courses/<int:pk>/enroll/', EnrollStudentAPIView.as_view()),
 
     # Lessons
     path('courses/<int:course_pk>/lessons/', LessonListCreateAPIView.as_view()),

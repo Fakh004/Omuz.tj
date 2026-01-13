@@ -33,20 +33,25 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 
+from rest_framework import serializers
+from .models import Course
+
 class CourseCreateUpdateSerializer(serializers.ModelSerializer):
-    instructor = serializers.StringRelatedField(read_only=True)  # не нужно передавать в POST
+    instructor = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Course
         fields = ['title', 'description', 'category', 'level', 'instructor']
 
 
-class EnrollStudentSerializer(serializers.ModelSerializer):
-    student_id = serializers.IntegerField(write_only=True)
 
-    class Meta:
-        model = Course
-        fields = ['student_id']
+
+from rest_framework import serializers
+from .models import Course
+from accounts.models import CustomUser
+
+class EnrollStudentSerializer(serializers.Serializer):
+    student_id = serializers.IntegerField(write_only=True)
 
     def validate_student_id(self, value):
         try:
@@ -57,8 +62,7 @@ class EnrollStudentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Можно записать только студентов")
         return value
 
-    def save(self, **kwargs):
-        course = self.instance
+    def save(self, course):  
         student_id = self.validated_data['student_id']
         student = CustomUser.objects.get(id=student_id)
         course.students.add(student)

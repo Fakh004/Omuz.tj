@@ -27,7 +27,7 @@ class CourseListAPIView(generics.ListAPIView):
 
 
 class CourseListCreateAPIView(generics.ListCreateAPIView):
-    queryset = Course.objects.all()  # <- обязательно
+    queryset = Course.objects.all() 
     serializer_class = CourseCreateUpdateSerializer
     permission_classes = [AllowAny]
 
@@ -37,26 +37,41 @@ class CourseListCreateAPIView(generics.ListCreateAPIView):
 
 class CourseRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Course.objects.all()
+    permission_classes = [AllowAny]  
     serializer_class = CourseCreateUpdateSerializer
-    permission_classes = [IsInstructorOrAdmin]
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return CourseSerializer
+        return self.serializer_class
 
 
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .serializers import EnrollStudentSerializer
+from .models import Course
+from .permissions import IsInstructorOrAdmin  
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def enroll_student(request, pk):
-    try:
-        course = Course.objects.get(pk=pk)
-    except Course.DoesNotExist:
-        return Response({"error": "Курс не найден"}, status=status.HTTP_404_NOT_FOUND)
+class EnrollStudentAPIView(generics.GenericAPIView):
+    serializer_class = EnrollStudentSerializer
+    permission_classes = [IsAuthenticated]
 
-    serializer = EnrollStudentSerializer(instance=course, data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response({"success": "Студент записан на курс"})
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, pk):
+        try:
+            course = Course.objects.get(pk=pk)
+        except Course.DoesNotExist:
+            return Response({"error": "Курс не найден"}, status=status.HTTP_404_NOT_FOUND)
 
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        serializer.save(course=course)
+
+        return Response({"success": f"Студент добавлен в курс {course.title}"}, status=status.HTTP_200_OK)
+
+    
 
 class LessonListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = LessonSerializer
@@ -74,4 +89,4 @@ class LessonListCreateAPIView(generics.ListCreateAPIView):
 class LessonRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
-    permission_classes = [IsInstructorOrAdmin]
+    permission_classes = [AllowAny]
