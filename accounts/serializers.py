@@ -9,14 +9,14 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = CustomUser 
         fields = ('username', 'email', 'password', 'password2')
 
-def validate(self, attrs):
-    password = attrs.get('password')
-    password2 = attrs.pop('password2')
-    if password != password2:
-        raise serializers.ValidationError('password do not match')
-    return super().validate(attrs)
+    def validate(self, attrs):
+        password = attrs.get('password')
+        password2 = attrs.pop('password2')
+        if password != password2:
+            raise serializers.ValidationError('password do not match')
+        return super().validate(attrs)
     
-def create(self, validated_data):
-    user = CustomUser.objects.create_user(**validated_data)
-    return user
+    def create(self, validated_data):
+        user = CustomUser.objects.create_user(**validated_data)
+        return user
     

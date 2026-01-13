@@ -1,36 +1,45 @@
 from django.db import models
-from django.conf import settings
+from django.conf import settings 
 
-User = settings.AUTH_USER_MODEL
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+
+    def __str__(self):
+        return self.name
+
 
 class Course(models.Model):
-    title = models.CharField(max_length=200)
+    LEVEL_CHOICES = (
+        ('beginner', 'Beginner'),
+        ('intermediate', 'Intermediate'),
+        ('advanced', 'Advanced'),
+    )
+
+    title = models.CharField(max_length=255)
     description = models.TextField()
-    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='courses')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='courses')
+    instructor = models.ForeignKey(settings.AUTH_USER_MODEL, limit_choices_to={'role': 'mentor'}, on_delete=models.CASCADE, related_name='instructed_courses')
+    students = models.ManyToManyField(settings.AUTH_USER_MODEL, limit_choices_to={'role': 'student'}, blank=True, related_name='enrolled_courses')
+    level = models.CharField(max_length=20, choices=LEVEL_CHOICES, default='beginner')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
+
 
 class Lesson(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
-    title = models.CharField(max_length=200)
-    video_url = models.URLField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.title
-    
-
-class Enrollment(models.Model):
-    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='enrollments')
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='enrollments')
-    created_at = models.DateTimeField(auto_now_add=True)
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    image = models.ImageField(upload_to='lesson_images/', null=True, blank=True)
+    order = models.PositiveIntegerField(default=0) 
 
     class Meta:
-        unique_together = ('student', 'course')
+        ordering = ['order']
 
     def __str__(self):
-        return f"{self.student} → {self.course}"
-
-
+        return f"{self.course.title} - {self.title}"

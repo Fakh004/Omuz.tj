@@ -40,3 +40,4 @@ def login_api_view(request):
 def logout_api_view(request):
     logout(request)
     return Response({'success':'user logged out'}, status=status.HTTP_200_OK)
+    

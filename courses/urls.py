@@ -1,12 +1,20 @@
 from django.urls import path
-from .views import (
-    CourseListCreateAPIView,
-    LessonCreateAPIView,
-    EnrollAPIView
-)
+from .views import *
 
 urlpatterns = [
-    path('courses/', CourseListCreateAPIView.as_view()),
-    path('courses/<int:course_id>/lessons/', LessonCreateAPIView.as_view()),
-    path('courses/<int:course_id>/enroll/', EnrollAPIView.as_view()),
+    # Category
+    path('categories/', CategoryListCreateAPIView.as_view()),
+    path('categories/<int:pk>/', CategoryRetrieveUpdateDestroyAPIView.as_view()),
+
+    # Courses
+    path('courses/', CourseListAPIView.as_view()),
+    path('courses/create/', CourseListCreateAPIView.as_view()),
+    path('courses/<int:pk>/', CourseRetrieveUpdateDestroyAPIView.as_view()),
+
+    # Enroll student
+    path('courses/<int:pk>/enroll/', enroll_student),
+
+    # Lessons
+    path('courses/<int:course_pk>/lessons/', LessonListCreateAPIView.as_view()),
+    path('lessons/<int:pk>/', LessonRetrieveUpdateDestroyAPIView.as_view()),
 ]
